@@ -1,0 +1,21 @@
+{
+  status: '500',
+  path: '\\middlewares\\auth.middleware.js',
+  level: 'error',
+  message: 'Unauthorized',
+  timestamp: '2024-04-02 09:24:25'
+}
+{
+  status: '500',
+  path: '\\middlewares\\auth.middleware.js',
+  level: 'error',
+  message: 'Unauthorized',
+  timestamp: '2024-04-02 09:24:31'
+}
+{
+  status: '500',
+  path: '\\middlewares\\auth.middleware.js',
+  level: 'error',
+  message: 'Request not Authorized',
+  timestamp: '2024-04-02 09:25:55'
+}
