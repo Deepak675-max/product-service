@@ -1,3 +1,4 @@
+const productModel = require("../../models/product/product.model");
 const ProductModel = require("../../models/product/product.model");
 const httpErrors = require('http-errors');
 
@@ -16,6 +17,7 @@ class ProductService {
             .skip(skip)
             .limit(pageSize)
             .sort(sort)
+            .select("-isDeleted -createdAt -updatedAt")
             .lean()
 
         return products;
@@ -26,7 +28,7 @@ class ProductService {
             const product = await ProductModel.findOne({
                 _id: productId,
                 isDeleted: false
-            });
+            }).select("-isDeleted -createdAt -updatedAt").lean();
             if (!product) throw httpErrors.NotFound(`Product not found`);
             return product;
         } catch (error) {
@@ -36,10 +38,10 @@ class ProductService {
 
     async updateProduct(productDetails) {
         try {
-            const product = await this.getProductDetails(productDetails.productId);
-            const updatedProduct = await product.updateOne(productDetails, {
+            const updatedProduct = await productModel.findOneAndUpdate({ _id: productDetails.productId, isDeleted: false }, productDetails, {
                 new: true
             });
+            if (!updatedProduct) throw httpErrors.NotFound('Product not found');
             return updatedProduct;
         } catch (error) {
             throw error;
@@ -48,14 +50,19 @@ class ProductService {
 
     async deleteProduct(productId) {
         try {
-            const product = await this.getProductDetails(productId);
-            await product.updateOne({
-                $set: {
-                    isDeleted: true
-                }
-            }, {
-                new: true
-            });
+            const product = await ProductModel.findByIdAndUpdate(
+                {
+                    _id: productId,
+                    isDeleted: false
+                },
+                {
+                    $set: {
+                        isDeleted: true
+                    }
+                },
+                { new: true }
+            );
+            if (!product) throw httpErrors.NotFound("Product not found");
         } catch (error) {
             throw error;
         }

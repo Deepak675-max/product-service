@@ -1,4 +1,5 @@
 const joi = require('joi');
+const { fileSchema } = require("../file/file.joi_validation");
 
 const createProductSchema = joi.object({
     name: joi.string().trim().required(),
@@ -8,11 +9,15 @@ const createProductSchema = joi.object({
     unit: joi.number().integer().required(),
     supplier: joi.string().trim().hex().length(24).required(),
     available: joi.boolean().optional().default(true),
-    isDeleted: joi.boolean().optional().default(false),
 });
+const createProductFileSchema = joi.object({
+    productImages: joi.array().items(fileSchema).required(),
+    thumbnailImage: joi.array().items(fileSchema).required(),
+})
 
 const getProductsSchema = joi.object({
     category: joi.string().trim().optional().default(null),
+    available: joi.boolean().optional().default(null),
     search: joi.string().trim().optional().allow('').default(null),
     metaData: joi.object({
         sortBy: joi.string().trim().optional().default(null),
@@ -35,7 +40,11 @@ const updateProductSchema = joi.object({
     price: joi.string().trim().optional().required(),
     unit: joi.number().integer().optional().required(),
     available: joi.boolean().optional().default(true),
-    isDeleted: joi.boolean().optional().default(false),
+})
+
+const updateProductFileSchema = joi.object({
+    productImages: joi.array().items(fileSchema).optional().default(null),
+    thumbnailImage: joi.array().items(fileSchema).optional().default(null),
 })
 
 const deleteProductsSchema = joi.object({
@@ -47,5 +56,6 @@ module.exports = {
     getProductsSchema,
     updateProductSchema,
     deleteProductsSchema,
-    getProductDetailsSchema
+    getProductDetailsSchema,
+    createProductFileSchema
 };

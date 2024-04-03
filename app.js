@@ -29,6 +29,7 @@ productServiceBackendApp.use(async (req, _res, next) => {
 
 // Common Error Handler
 productServiceBackendApp.use((error, req, res, next) => {
+    console.log(error);
     const responseStatus = error.status || 500;
     const responseMessage =
         error.message || `Cannot resolve request [${req.method}] ${req.url}`;

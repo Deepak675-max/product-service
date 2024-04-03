@@ -1,17 +1,27 @@
 const joiProduct = require('../../utils/joi/product/product.joi_validation');
 const { logger } = require("../../utils/error_logger/winston.js");
 const ProductService = require("../../services/product/product.service");
-
-const { DEFAULT_LIMIT, DEFAULT_OFFSET, DEFAULT_SORT_BY, DEFAULT_SORT_ORDER } = require("../../config/index.js");
-
+const FileModel = require("../../models/file/file.model.js");
+const { DEFAULT_LIMIT, DEFAULT_OFFSET, DEFAULT_SORT_BY, DEFAULT_SORT_ORDER, APP_BACKEND_BASE_URL } = require("../../config/index.js");
 
 const productService = new ProductService();
 
 const createProduct = async (req, res, next) => {
     try {
+        console.log("kamboj");
         const productDetails = await joiProduct.createProductSchema.validateAsync(req.body);
 
+        const filesDetails = await joiProduct.createProductFileSchema.validateAsync(req.files);
+
         const newProduct = await productService.createProduct(productDetails);
+
+        await Promise.all(
+            filesDetails.productImages.map(async (productImage) => {
+                await FileModel.create({ ...productImage, productId: newProduct._id });
+            })
+        )
+
+        await FileModel.create({ ...filesDetails.thumbnailImage[0], productId: newProduct._id });
 
         if (res.headersSent === false) {
             res.status(201).send({
@@ -29,6 +39,7 @@ const createProduct = async (req, res, next) => {
         logger.error(error.message, { status: error.status, path: __filename });
         next(error);
     }
+
 }
 
 const getProducts = async (req, res, next) => {
@@ -49,6 +60,9 @@ const getProducts = async (req, res, next) => {
         if (querySchema.category) {
             queryDetails.where.category = querySchema.category;
         }
+        if (querySchema.available) {
+            queryDetails.where.available = querySchema.available;
+        }
 
         if (querySchema.search) {
             queryDetails.where.$or = [
@@ -59,12 +73,27 @@ const getProducts = async (req, res, next) => {
 
         const products = await productService.getProducts(queryDetails);
 
+        const processedProducts = await Promise.all(
+            products.map(async (product) => {
+                const productThumbnailImage = await FileModel.findOne({
+                    productId: product._id,
+                    fieldname: "thumbnailImage",
+                    isDeleted: false
+                });
+                if (productThumbnailImage)
+                    product.thumbnailImage = `${APP_BACKEND_BASE_URL}/files/${productThumbnailImage.filename}`
+                else
+                    product.thumbnailImage = null;
+                return product;
+            })
+        )
+
         // Send the response
         if (res.headersSent === false) {
             res.status(200).send({
                 error: false,
                 data: {
-                    products: products,
+                    products: processedProducts,
                     message: "Products fetched successfully",
                 },
             });
@@ -80,9 +109,21 @@ const getProducts = async (req, res, next) => {
 
 const getProductDetails = async (req, res, next) => {
     try {
-        const { id } = await joiProduct.getProductDetailsSchema.validateAsync(req.params);
+        const { id: productId } = await joiProduct.getProductDetailsSchema.validateAsync(req.params);
 
-        const product = await productService.getProductDetails(id);
+        const product = await productService.getProductDetails(productId);
+
+        const productThumbnailImage = await FileModel.findOne({
+            productId: product._id,
+            fieldname: "thumbnailImage",
+            isDeleted: false
+        });
+
+        if (productThumbnailImage) {
+            product.thumbnailImage = `${APP_BACKEND_BASE_URL}/files/${productThumbnailImage.filename}`;
+        } else {
+            product.thumbnailImage = null; // Set image to null if not found
+        }
 
         // Send the response
         if (res.headersSent === false) {
@@ -129,7 +170,7 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProducts = async (req, res, next) => {
     try {
-        const { productId } = await joiProduct.deleteProductsSchema.validateAsync(req.params);
+        const { id: productId } = await joiProduct.deleteProductsSchema.validateAsync(req.params);
 
         await productService.deleteProduct(productId);
 
