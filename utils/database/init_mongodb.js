@@ -1,7 +1,7 @@
 // Import Packages
 const mongoose = require("mongoose");
 
-const mongodbURI = 'mongodb://127.0.0.1:27017/product-service'
+const mongodbURI = 'mongodb://127.0.0.1:27017/product-db'
 
 // Establish Connection to MongoDB Server
 mongoose.set("strictQuery", false);

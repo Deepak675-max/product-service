@@ -8,7 +8,6 @@ const productService = new ProductService();
 
 const createProduct = async (req, res, next) => {
     try {
-        console.log("kamboj");
         const productDetails = await joiProduct.createProductSchema.validateAsync(req.body);
 
         const filesDetails = await joiProduct.createProductFileSchema.validateAsync(req.files);
