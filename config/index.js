@@ -12,7 +12,5 @@ module.exports = {
     DEFAULT_SORT_BY: process.env.DEFAULT_SORT_BY,
     DEFAULT_SORT_ORDER: process.env.DEFAULT_SORT_ORDER,
     APP_BACKEND_BASE_URL: process.env.APP_BACKEND_BASE_URL,
-    CART_QUEUE: "cart_queue",
-    ORDER_QUEUE: "order_queue",
     PRODUCT_QUEUE: "product_queue"
 };

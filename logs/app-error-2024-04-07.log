@@ -1,0 +1,7 @@
+{
+  status: '500',
+  path: '\\middlewares\\auth.middleware.js',
+  level: 'error',
+  message: 'Request not Authorized',
+  timestamp: '2024-04-07 13:11:22'
+}

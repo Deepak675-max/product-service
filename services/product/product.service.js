@@ -1,4 +1,3 @@
-const productModel = require("../../models/product/product.model");
 const ProductModel = require("../../models/product/product.model");
 const httpErrors = require('http-errors');
 
@@ -38,7 +37,7 @@ class ProductService {
 
     async updateProduct(productDetails) {
         try {
-            const updatedProduct = await productModel.findOneAndUpdate({ _id: productDetails.productId, isDeleted: false }, productDetails, {
+            const updatedProduct = await ProductModel.findOneAndUpdate({ _id: productDetails.productId, isDeleted: false }, productDetails, {
                 new: true
             });
             if (!updatedProduct) throw httpErrors.NotFound('Product not found');
@@ -72,24 +71,30 @@ class ProductService {
         try {
             await Promise.all(
                 items.map(async (item) => {
-                    const product = await this.getProductDetails(item.product._id);
+                    const product = await ProductModel.findOne({
+                        _id: item.product._id,
+                        isDeleted: false
+                    });
                     const remainingUnit = product.unit - item.unit;
                     product.unit = remainingUnit;
                     await product.save();
                 })
             )
+            // return { success: true, message: "Product Inventory updated Successfully" };
+            console.log("Product Inventory updated Successfully");
         } catch (error) {
-            throw error;
+            console.log(error);
+            return error;
         }
     }
 
     async SubscribeEvents(payload) {
         // describe events here.
-        const { items, event } = payload;
+        const { data, event } = payload;
 
         switch (event) {
             case "UPDATE_PRODUCTS_INVENTORY":
-                await this.updateProductsInventory(items);
+                await this.updateProductsInventory(data);
                 break;
 
             default:
